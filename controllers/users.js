@@ -9,7 +9,10 @@ router.post('/signin', async (req, res) => {
     try {
         const user = await User.findOne({ username: req.body.username });
         if (user && bcrypt.compareSync(req.body.password, user.hashedPassword)) {
-            res.json({ message: 'Username and password match!' })  
+            const token = jwt.sign(
+                { username: user.username, _id: user._id},
+                process.env.JWT_SECRET);
+            res.status(200).json({ token }) 
         } else {
             res.json({ message: 'Username or password incorrect, please try again.' })
         }
@@ -29,7 +32,7 @@ router.post('/signup', async (req, res) => {
     const emailInDatabase = await User.findOne({ email:req.body.email });
     if (emailInDatabase) {
         return res.status(400).json
-        ({ error: 'Email already in use. Please try a different email, or login.' })
+        ({ error: 'Email is already in use. Please try a different email, or login.' })
     }
     const hashedPassword = bcrypt.hashSync(req.body.password, SALT_LENGTH);
 
@@ -39,10 +42,14 @@ router.post('/signup', async (req, res) => {
         hashedPassword,
         role: req.body.role
     });
-    res.status(201).json({ user })
+    const token = jwt.sign(
+        { username: user.username, _id: user._id},
+        process.env.JWT_SECRET);
+
+    res.status(201).json({ user, token })
   } catch (error) {
-    
-  }
+    res.status(400).json({ error: error.message })
+  };
 });
 
 module.exports = router;
