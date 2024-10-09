@@ -26,4 +26,28 @@ router.get('/:chiidId', async (req, res) => {
     }
 })
 
+router.put('/:id', async (req, res) => {
+    try {
+        const updatedFeed = await NewsFeed.findByIdAndUpdate(req.params.id, req.body, {new: true});
+        if (!updatedFeed) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+        res.status(200).json(updatedFeed);
+    } catch (error) {
+        res.status(400).json({ error: error.message })
+    }
+})
+
+router.delete('/id', async (req, res) => {
+    try {
+        const deletedFeed = await NewsFeed.findByIdAndDelete(req.params.id);
+        if (!deletedFeed) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+        res.status(204).send()
+    } catch (error) {
+        res.status(400).json({ error: error.message })
+    }
+})
+
 module.exports = router;
