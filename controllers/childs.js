@@ -3,10 +3,18 @@ const router = express.Router();
 const Child = require('../models/child')
 const verifyToken = require('../middleware/verify-token');
 
-router.post('/', verifyToken, async (req, res) => {
+router.post('/childs', verifyToken, async (req, res) => {
+    const {name, age, notes }  = req.body;
+    const caregiverId = req.user._id;
+
     try {
-        const {name, age, caregiver} = req.body;
-        const newChild = new Child({ name, age, caregiver });
+        const newChild = new ChildModel({ 
+            name,
+            age,
+            caregiver: caregiverId,
+            parentName: caregiverId,
+            notes,
+         });
         await newChild.save();
         res.status(201).json(newChild);
     } catch (error) {
