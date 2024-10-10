@@ -10,7 +10,6 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
-        match: /.+\@.+\..+/
     },
     hashedPassword: {
         type: String,
@@ -18,7 +17,7 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['parent', 'caregiver'],
+        enum: ['Parent', 'Caregiver'],
         required: true
     },
     timeStamp: {
