@@ -9,18 +9,10 @@ const childSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    // role: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'User',
-    // },
     caregiver: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
     },
-    // parentName: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'User',
-    // },
     notes: {
         type: String
     },
