@@ -26,7 +26,7 @@ router.get('/:newsFeedId', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
     try {
-        const updatedcomment = await Comment.findByIdAndUpdate(req.params.id, req.body, {new: true});
+        const updatedComment = await Comment.findByIdAndUpdate(req.params.id, req.body, {new: true});
         if (!updatedComment) {
             return res.status(404).json({ error: 'Comment not found' });
         }

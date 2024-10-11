@@ -17,10 +17,10 @@ const childSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
     },
-    parentName: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-    },
+    // parentName: {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'User',
+    // },
     notes: {
         type: String
     },

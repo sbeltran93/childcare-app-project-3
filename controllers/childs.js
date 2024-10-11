@@ -3,16 +3,16 @@ const router = express.Router();
 const Child = require('../models/child')
 const verifyToken = require('../middleware/verify-token');
 
-router.post('/childs', verifyToken, async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
     const {name, age, notes }  = req.body;
-    const caregiverId = req.user._id;
-
+    const tomato = req.user._id;
+    console.log("user", req.user)
     try {
-        const newChild = new ChildModel({ 
+        const newChild = new Child({ 
             name,
             age,
-            caregiver: caregiverId,
-            parentName: caregiverId,
+            caregiver: tomato,
+            // parentName: caregiverId,
             notes,
          });
         await newChild.save();
@@ -22,10 +22,14 @@ router.post('/childs', verifyToken, async (req, res) => {
     }
 });
 
-router.get('/:caregiverId', async (req, res) => {
+router.get('/:childId', async (req, res) => {
+    const caregiverId = req.user.userId;
     try {
-        const children = await Child.find({ caregiver: req.params.caregiverId });
-        res.status(200).json(children);
+        const child = await Child.findOne({ _id: req.params.childId, caregiver: userId });
+        if (!child) {
+            return res.status(404).json({ error: 'Child not found' });
+        }
+        res.status(200).json(child);
     } catch (error) {
         res.status(400).json({ error: error.message })
     }

@@ -17,9 +17,9 @@ router.post('/', verifyToken, async (req, res) => {
     }
 });
 
-router.get('/:chiidId', async (req, res) => {
+router.get('/:childsId', async (req, res) => {
     try {
-        const feeds = await NewsFeed.find({ child: req.params.chiidId }).populate('caregiver');
+        const feeds = await NewsFeed.find({ child: req.params.childsId }).populate('caregiver');
         res.status(200).json(feeds)
     } catch (error) {
         res.status(400).json({ error: error.message });
