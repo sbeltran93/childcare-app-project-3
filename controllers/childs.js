@@ -5,14 +5,14 @@ const verifyToken = require('../middleware/verify-token');
 
 router.post('/', verifyToken, async (req, res) => {
     const {name, age, notes }  = req.body;
-    const tomato = req.user._id;
+    const caregiver = req.user._id;
     console.log("user", req.user)
     try {
         const newChild = new Child({ 
             name,
             age,
-            caregiver: tomato,
-            // parentName: caregiverId,
+            caregiver: caregiver,
+            
             notes,
          });
         await newChild.save();
@@ -23,9 +23,9 @@ router.post('/', verifyToken, async (req, res) => {
 });
 
 router.get('/:childId', async (req, res) => {
-    const caregiverId = req.user.userId;
+    const caregiver = req.user._id;
     try {
-        const child = await Child.findOne({ _id: req.params.childId, caregiver: userId });
+        const child = await Child.findOne({ _id: req.params.childId, caregiver: user._id });
         if (!child) {
             return res.status(404).json({ error: 'Child not found' });
         }
