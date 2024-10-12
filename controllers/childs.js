@@ -22,14 +22,14 @@ router.post('/', verifyToken, async (req, res) => {
     }
 });
 
-router.get('/', async (req, res) => {
-    try {
-        const childs = await Child.find().populate('caregiver');
-        res.status(200).json(childs);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
+// router.get('/', async (req, res) => {
+//     try {
+//         const childs = await Child.find().populate('caregiver');
+//         res.status(200).json(childs);
+//     } catch (error) {
+//         res.status(400).json({ error: error.message });
+//     }
+// });
 
 router.get('/', verifyToken, async (req, res) => {
     try {
@@ -40,7 +40,7 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-router.get('/:childId', verifyToken, async (req, res) => {
+router.get('/:userId', verifyToken, async (req, res) => {
     const caregiver = req.user._id;
     try {
         const child = await Child.findOne({ _id: req.params.childId, caregiver: caregiver });

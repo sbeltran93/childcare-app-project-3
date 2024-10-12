@@ -63,10 +63,12 @@ router.post('/signup', async (req, res) => {
   };
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:tomatoid', async (req, res) => {
     try {
-        const userId = req.params.id;
-        const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {new: true});
+        const updatedUser = await User.findByIdAndUpdate(req.params.tomatoid, req.body, {new: true});
+        console.log(updatedUser)
+        console.log(req.params.tomatoid)
+        console.log(req.body)
         if (!updatedUser) {
             return res.status(404).json({ error: 'User not found' });
             
