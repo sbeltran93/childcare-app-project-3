@@ -78,8 +78,8 @@ router.put('/:childId', verifyToken, async (req, res) => {
 router.delete('/:childId', verifyToken, async (req, res) => {
     try {
         const childId = req.params.childId;
-        // const caregiverId = req.user._id;
-        const child = await Child.findOneAndDelete(childId);
+        console.log(req.params.childId)
+        const child = await Child.findByIdAndDelete(childId);
 
         if (!child) {
             return res.status(404).json({ error: 'Child not found' });
