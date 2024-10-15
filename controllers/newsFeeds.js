@@ -5,27 +5,41 @@ const NewsFeed = require('../models/newsFeed');
 const jwt = require('jsonwebtoken');
 const verifyToken = require('../middleware/verify-token');
 
-
+// route to make post
 router.post('/', verifyToken, async (req, res) => {
     try {
-        const {child, caregiver, content} = req.body;
-        const newFeed = new NewsFeed({ child, caregiver, content });
+        const {content} = req.body;
+        const caregiver = req.user._id;
+        const newFeed = new NewsFeed({caregiver, content });
         await newFeed.save();
-        res.status(201).json(newfeed);
+        console.log(newFeed)
+        res.status(201).json(newFeed);
     } catch (error) {
         res.status(400).json({ error: error.message })
     }
 });
 
-router.get('/:childsId', async (req, res) => {
+// route to find post by user id
+router.get('/', verifyToken, async (req, res) => {
     try {
-        const feeds = await NewsFeed.find({ child: req.params.childsId }).populate('caregiver');
+        const newsFeed = await NewsFeed.find({ caregiver: req.user._id });
+        res.status(200).json(newsFeed);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// route to get post by user id
+router.get('/:userId', async (req, res) => {
+    try {
+        const feeds = await NewsFeed.find({ caregiver: req.params.user._id }).populate('caregiver');
         res.status(200).json(feeds)
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 })
 
+// route to update post by post id
 router.put('/:id', async (req, res) => {
     try {
         const updatedFeed = await NewsFeed.findByIdAndUpdate(req.params.id, req.body, {new: true});
@@ -38,6 +52,7 @@ router.put('/:id', async (req, res) => {
     }
 })
 
+// route to delete post by post id
 router.delete('/id', async (req, res) => {
     try {
         const deletedFeed = await NewsFeed.findByIdAndDelete(req.params.id);

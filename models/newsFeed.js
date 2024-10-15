@@ -6,11 +6,6 @@ const newsFeedSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
-    child: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Child',
-        required: true,
-    },
     content: {
         type: String,
         required: true,
@@ -21,4 +16,4 @@ const newsFeedSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('newsFeed', newsFeedSchema);
+module.exports = mongoose.model('NewsFeed', newsFeedSchema);

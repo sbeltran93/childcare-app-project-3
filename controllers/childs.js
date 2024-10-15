@@ -22,15 +22,6 @@ router.post('/', verifyToken, async (req, res) => {
     }
 });
 
-// router.get('/', async (req, res) => {
-//     try {
-//         const childs = await Child.find().populate('caregiver');
-//         res.status(200).json(childs);
-//     } catch (error) {
-//         res.status(400).json({ error: error.message });
-//     }
-// });
-
 router.get('/', verifyToken, async (req, res) => {
     try {
         const childs = await Child.find({ caregiver: req.user._id });
