@@ -12,14 +12,11 @@ router.post('/', verifyToken, async (req, res) => {
         const caregiver = req.user._id;
         const newFeed = new NewsFeed({caregiver, content });
         await newFeed.save();
-        console.log(newFeed)
         res.status(201).json(newFeed);
     } catch (error) {
         res.status(400).json({ error: error.message })
     }
 });
-
-// route to find post by user id
 router.get('/', verifyToken, async (req, res) => {
     try {
         const newsFeed = await NewsFeed.find({ caregiver: req.user._id });
@@ -28,8 +25,6 @@ router.get('/', verifyToken, async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-
-// route to get post by user id
 router.get('/:userId', async (req, res) => {
     try {
         const feeds = await NewsFeed.find({ caregiver: req.params.user._id }).populate('caregiver');
@@ -38,8 +33,6 @@ router.get('/:userId', async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 })
-
-// route to update post by post id
 router.put('/:id', async (req, res) => {
     try {
         const updatedFeed = await NewsFeed.findByIdAndUpdate(req.params.id, req.body, {new: true});
@@ -51,9 +44,7 @@ router.put('/:id', async (req, res) => {
         res.status(400).json({ error: error.message })
     }
 })
-
-// route to delete post by post id
-router.delete('/id', async (req, res) => {
+router.delete('/:id', async (req, res) => {
     try {
         const deletedFeed = await NewsFeed.findByIdAndDelete(req.params.id);
         if (!deletedFeed) {

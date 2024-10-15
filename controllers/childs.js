@@ -6,7 +6,6 @@ const verifyToken = require('../middleware/verify-token');
 router.post('/', verifyToken, async (req, res) => {
     const {name, age, notes }  = req.body;
     const caregiver = req.user._id;
-    console.log("user", req.user)
     try {
         const newChild = new Child({ 
             name,
@@ -69,7 +68,6 @@ router.put('/:childId', verifyToken, async (req, res) => {
 router.delete('/:childId', verifyToken, async (req, res) => {
     try {
         const childId = req.params.childId;
-        console.log(req.params.childId)
         const child = await Child.findByIdAndDelete(childId);
 
         if (!child) {

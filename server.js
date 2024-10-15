@@ -19,14 +19,12 @@ const usersRouter = require('./controllers/users');
 const profilesRouter = require('./controllers/profiles');
 const childsRouter = require('./controllers/childs');
 const newsFeedsRouter = require('./controllers/newsFeeds');
-const commentsRouter = require('./controllers/comments');
 
 app.use('/test-jwt', testJWTRouter);
 app.use('/users', usersRouter);
 app.use('/profiles', profilesRouter);
 app.use('/childs', childsRouter);
 app.use('/newsfeeds', newsFeedsRouter);
-app.use('/comments', commentsRouter);
 
 app.listen(3000, () => {
   console.log('The express app is ready!');
