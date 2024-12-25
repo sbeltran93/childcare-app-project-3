@@ -1,19 +1,51 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
-const Child = require('../models/child')
+const Child = require('../models/child');
+const User = require('../models/user');
 const verifyToken = require('../middleware/verify-token');
+const verifyOwnership = require('../middleware/verifyOwnership');
+const verifyRole = require('../middleware/verifyRole');
 
-router.post('/', verifyToken, async (req, res) => {
-    const {name, age, notes }  = req.body;
+
+//Create for child, caregiver can only add a child to the DB
+router.post('/', verifyToken, verifyRole('Caregiver'), async (req, res) => {
+    const {name, age, notes, parents }  = req.body;
     const caregiver = req.user._id;
+    console.log('Logged-in user (req.user):', req.user);
+
     try {
-        const newChild = new Child({ 
-            name,
-            age,
-            caregiver: caregiver,
-            
-            notes,
-         });
+        if (!mongoose.Types.ObjectId.isValid(caregiver)) {
+            return res.status(400).json({ error: 'Invalid caregiver ID' })
+        }
+        const caregiverObjectId = new mongoose.Types.ObjectId(caregiver);
+
+        if (parents.some(parent => !mongoose.Types.ObjectId.isValid(parent))) {
+            return res.status(400).json({ error: 'One or more parent IDs are invalid' });
+        }
+
+        const parentsObjectIds = parents.map(parent => new mongoose.Types.ObjectId(parent));
+
+    // Find the caregiver and check if it exists
+    const caregiverUser = await User.findById(caregiver);
+    if (!caregiverUser) {
+      return res.status(400).json({ error: "Caregiver not found" });
+    }
+
+    // Check if all parents exist
+    const parentUsers = await User.find({
+         '_id': { $in: parents } 
+    });
+    if (parentUsers.length !== parents.length) {
+      return res.status(400).json({ error: "Some parents not found" });
+    }
+    const newChild = new Child({ 
+        name,
+        age,
+        notes,
+        caregiver: caregiverObjectId,
+        parents: parentsObjectIds,
+    });
         await newChild.save();
         res.status(201).json(newChild);
     } catch (error) {
@@ -21,7 +53,8 @@ router.post('/', verifyToken, async (req, res) => {
     }
 });
 
-router.get('/', verifyToken, async (req, res) => {
+//showing all children by caregiver, logged in, verified caregiver can only view list of children
+router.get('/', verifyToken, verifyRole('Caregiver'),  async (req, res) => {
     try {
         const childs = await Child.find({ caregiver: req.user._id });
         res.status(200).json(childs);
@@ -30,10 +63,24 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-router.get('/:userId', verifyToken, async (req, res) => {
+//view of child by id, access for both parents and caregivers
+router.get('/:childId', verifyToken, async (req, res) => {
     const caregiver = req.user._id;
+    const role = req.user.role;
+
     try {
-        const child = await Child.findOne({ _id: req.params.childId, caregiver: caregiver });
+        let child;
+
+    if (role === 'Parent') {
+        child = await Child.findOne({
+             _id: req.params.childId, 
+             parents: req.user._id 
+            });
+    } else if (role === 'Caregiver') {
+        child = await Child.findOne({ 
+            _id: req.params.childId, 
+            caregiver: caregiverId });
+    }      
         if (!child) {
             return res.status(404).json({ error: 'Child not found' });
         }
@@ -43,17 +90,19 @@ router.get('/:userId', verifyToken, async (req, res) => {
     }
 })
 
-router.put('/:childId', verifyToken, async (req, res) => {
+//edit childs info, only caregivers can edit
+router.put('/:childId', verifyToken, verifyRole('Caregiver'), async (req, res) => {
+    const { name, age, notes } = req.body;
+    const caregiverId = req.user._id;
+    const { childId } = req.params;
+
     try {
-        const childId = req.params.childId;
-        const caregiverId = req.user._id;
         const child = await Child.findOne({ _id: childId, caregiver: caregiverId });
 
         if (!child) {
-            return res.status(404).json({ error: 'Child not found' });
+            return res.status(404).json({ error: 'Child not found or you do not have permission to edit info' });
         }
 
-        const { name, age, notes } = req.body;
         child.name = name;
         child.age = age;
         child.notes = notes;
@@ -65,7 +114,7 @@ router.put('/:childId', verifyToken, async (req, res) => {
     }
 });
 
-router.delete('/:childId', verifyToken, async (req, res) => {
+router.delete('/:childId', verifyToken, verifyRole('Caregiver'), async (req, res) => {
     try {
         const childId = req.params.childId;
         const child = await Child.findByIdAndDelete(childId);

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/user');
 const verifyToken = require('../middleware/verify-token');
+const verifyOwnership = require('../middleware/verifyOwnership');
 
 router.get('/:userId', verifyToken, async (req, res) => {
     try {

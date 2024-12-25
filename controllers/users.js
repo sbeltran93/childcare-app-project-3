@@ -3,24 +3,11 @@ const router = express.Router();
 const bcrypt = require('bcryptjs')
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
+const verifyToken = require('../middleware/verify-token');
+const verifyRole = require('../middleware/verifyRole');
+const verifyOwnership = require('../middleware/verifyOwnership')
 
 const SALT_LENGTH = 12;
-
-router.post('/signin', async (req, res) => {
-    try {
-        const user = await User.findOne({ username: req.body.username });
-        if (user && bcrypt.compareSync(req.body.password, user.hashedPassword)) {
-            const token = jwt.sign(
-                { username: user.username, _id: user._id, email: user.email, role: user.role},
-                process.env.JWT_SECRET);
-            res.status(200).json({ token }) 
-        } else {
-            res.json({ message: 'Username or password incorrect, please try again.' })
-        }
-    } catch (error) {
-        res.status(400).json({ error: error.message })
-    }
-})
 
 
 router.post('/signup', async (req, res) => {
@@ -36,16 +23,21 @@ router.post('/signup', async (req, res) => {
         return res.status(400).json
         ({ error: 'Email is already in use. Please try a different email, or login.' })
     }
-    const hashedPassword = bcrypt.hashSync(req.body.password, SALT_LENGTH);
+    const hashedPassword = await bcrypt.hashSync(req.body.password, SALT_LENGTH);
+
     const user = await User.create({
         username: req.body.username,
         email: req.body.email,
         hashedPassword,
-        role: req.body.role
+        role: req.body.role || 'User',
     });
 
     const token = jwt.sign(
-        { username: user.username, _id: user._id, email: user.email, role: user.role},
+        { username: user.username,
+             _id: user._id, 
+             email: user.email, 
+             role: user.role
+            },
         process.env.JWT_SECRET);
 
     res.status(201).json({ user, token })
@@ -54,7 +46,28 @@ router.post('/signup', async (req, res) => {
   };
 });
 
-router.put('/:tomatoid', async (req, res) => {
+router.post('/signin', async (req, res) => {
+    try {
+        const user = await User.findOne({ username: req.body.username });
+        if (user && bcrypt.compareSync(req.body.password, user.hashedPassword)) {
+            const token = jwt.sign(
+                { username: user.username, 
+                    _id: user._id, 
+                    email: user.email, 
+                    role: user.role
+                },
+                process.env.JWT_SECRET);
+            res.status(200).json({ token }) 
+        } else {
+            res.json({ message: 'Username or password incorrect, please try again.' })
+        }
+    } catch (error) {
+        res.status(400).json({ error: error.message })
+    }
+})
+
+
+router.put('/:tomatoid', verifyToken, async (req, res) => {
     try {
         const updatedUser = await User.findByIdAndUpdate(req.params.tomatoid, req.body, {new: true});
         if (!updatedUser) {
@@ -66,7 +79,7 @@ router.put('/:tomatoid', async (req, res) => {
     }
 })
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
     try {
         const userId = req.params.id;
         const deletedUser = await User.findByIdAndDelete(userId);

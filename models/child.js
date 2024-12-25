@@ -12,14 +12,17 @@ const childSchema = new mongoose.Schema({
     caregiver: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
+        required: true,
     },
     notes: {
-        type: String
-    },
-    timeStamp: {
-        type: Date,
-        default: Date.now
-    }
+        type: String,
+    },    
+    parents: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        }],
+    }, {
+    timeStamps: true,
 });
 
 module.exports = mongoose.model('Child', childSchema);
