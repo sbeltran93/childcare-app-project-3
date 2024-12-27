@@ -53,6 +53,8 @@ router.post('/', verifyToken, verifyRole('Caregiver'), async (req, res) => {
     }
 });
 
+
+/*
 //showing all children by caregiver, logged in, verified caregiver can only view list of children
 router.get('/', verifyToken, verifyRole('Caregiver'),  async (req, res) => {
     try {
@@ -62,11 +64,33 @@ router.get('/', verifyToken, verifyRole('Caregiver'),  async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
+*/
+router.get('/', verifyToken, async (req, res) => {
+    const { role, _id } = req.user
 
+    try {
+        let children;
+
+        if (role === 'Caregiver') {
+            children = await Child.find({ caregiver: _id });
+        } else if (role === 'Parent') {
+            children = await Child.find({ parents: _id })
+        }
+        else {
+            return res.status(403).json({ error: 'Access forbidden' })
+        }
+
+        res.status(200).json(children)
+    } catch (error) {
+        res.status(400).json({ error: error.message })
+    }
+})
+/*
 //view of child by id, access for both parents and caregivers
 router.get('/:childId', verifyToken, async (req, res) => {
-    const caregiver = req.user._id;
-    const role = req.user.role;
+    const { _id: userId, role } = req.user;
+    // const caregiver = req.user._id;
+    // const role = req.user.role;
 
     try {
         let child;
@@ -74,12 +98,13 @@ router.get('/:childId', verifyToken, async (req, res) => {
     if (role === 'Parent') {
         child = await Child.findOne({
              _id: req.params.childId, 
-             parents: req.user._id 
+             parents: userId 
             });
     } else if (role === 'Caregiver') {
         child = await Child.findOne({ 
             _id: req.params.childId, 
-            caregiver: caregiverId });
+            caregiver: userId 
+        });
     }      
         if (!child) {
             return res.status(404).json({ error: 'Child not found' });
@@ -89,20 +114,25 @@ router.get('/:childId', verifyToken, async (req, res) => {
         res.status(400).json({ error: error.message })
     }
 })
-
+*/
 //edit childs info, only caregivers can edit
 router.put('/:childId', verifyToken, verifyRole('Caregiver'), async (req, res) => {
     const { name, age, notes } = req.body;
-    const caregiverId = req.user._id;
-    const { childId } = req.params;
-
     try {
+        const { childId } = req.params; 
+        const { role, _id } = req.user;     
+        const caregiverId = req.user._id;
+    
         const child = await Child.findOne({ _id: childId, caregiver: caregiverId });
 
         if (!child) {
             return res.status(404).json({ error: 'Child not found or you do not have permission to edit info' });
         }
-
+/*
+        if (role === 'Caregiver' && child.caregiver.toString() !== _id.toString()) {
+            return res.status(403).json({ error: 'You do not have access to edit child\'s info.' })
+        }
+*/
         child.name = name;
         child.age = age;
         child.notes = notes;
@@ -125,7 +155,7 @@ router.delete('/:childId', verifyToken, verifyRole('Caregiver'), async (req, res
 
         res.status(204).send();
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        res.status(404).json({ error: error.message });
     }
 });
 

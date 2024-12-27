@@ -12,7 +12,8 @@ const newsFeedSchema = new mongoose.Schema({
     },
     child: { 
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Child'
+        ref: 'Child',
+        required: true,
      },
     timeStamp: {
         type: Date,

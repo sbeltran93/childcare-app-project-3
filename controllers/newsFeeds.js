@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs')
 const NewsFeed = require('../models/newsFeed');
+const Child = require('../models/child');
+const User = require('../models/user')
 const jwt = require('jsonwebtoken');
 const verifyToken = require('../middleware/verify-token');
 const verifyOwnership = require('../middleware/verifyOwnership');
@@ -9,12 +11,22 @@ const verifyRole = require('../middleware/verifyRole');
 
 // route to make post, only caregiver is authorized 
 router.post('/', verifyToken, verifyRole('Caregiver'), async (req, res) => {
-    const {content, childId } = req.body;
+    console.log('Request body received:', req.body);
+    const {content, child: childId } = req.body;
     const caregiver = req.user._id;
 
     try {
-        if (!childId) {
-            return res.status(400).json({ error: 'Child ID is required.' })
+
+        if (!content || !childId) {
+            console.error('Missing content or childId');
+            return res.status(400).json({ error: 'Content and child is required.' })
+        }
+
+        const child = await Child.findById(childId)
+        console.log('Child found:', child);
+        if (!child) {
+            console.error('Invalid Child ID provided:', childId);
+            return res.status(400).json({ error: 'Invalid Child Id provided.' })
         }
 
         const newFeed = new NewsFeed({
@@ -23,28 +35,48 @@ router.post('/', verifyToken, verifyRole('Caregiver'), async (req, res) => {
             child: childId,
          });
         await newFeed.save();
+
+        console.log('New post created:', newFeed);
         res.status(201).json(newFeed);
     } catch (error) {
+        console.error("Error creating post:", error);
         res.status(400).json({ error: error.message })
     }
 });
     //parent newsfeed route
-router.get('/', verifyToken, verifyRole('Parent'),  async (req, res) => {
-    const parentId = req.user._id;
+router.get('/', verifyToken,  async (req, res) => {
+    const userId = req.user._id;
+    console.log('Fetching newsfeeds for user:', userId);
 
     try {
-        //children associated with parent
-        const children = await Child.find({ parents: parentId }).select('_id');
-        //extracting child id to use in the query
-        const childIds = children.map(child => child._id);
-        //fetch newsfeed related to child
-        const newsFeed = await NewsFeed.find({ child: { $in: childIds } })
+
+        const isCaregiver = req.user.role === 'Caregiver';
+
+        let childIds = []
+        if (!isCaregiver) {
+
+            const children = await Child.find({ parents: userId }).select('_id');
+            childIds = children.map(child => child._id);
+        }
+
+        let newsFeed = [];
+        if (isCaregiver) {
+
+        newsFeed = await NewsFeed.find({ caregiver: userId })
             .populate('caregiver', 'username')
             .populate('child', 'name')
             .sort({ timestamp: -1 });
+        } else {
+            newsFeed = await NewsFeed.find({ child: { $in: childIds } })
+                .populate('caregiver', 'username')
+                .populate('child', 'name')
+                .sort({ timestamp: -1 });
+        }        
+        console.log('Newsfeed found:', newsFeed);
         res.status(200).json(newsFeed) 
    
     } catch (error) {
+        console.error('Error fetching newsfeed:', error.message);
         res.status(400).json({ error: error.message })
     }
 });
