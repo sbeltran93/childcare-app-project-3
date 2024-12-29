@@ -12,7 +12,7 @@ const verifyRole = require('../middleware/verifyRole');
 // route to make post, only caregiver is authorized 
 router.post('/', verifyToken, verifyRole('Caregiver'), async (req, res) => {
     console.log('Request body received:', req.body);
-    const {content, child: childId } = req.body;
+    const {title, content, child: childId } = req.body;
     const caregiver = req.user._id;
 
     try {
@@ -30,7 +30,8 @@ router.post('/', verifyToken, verifyRole('Caregiver'), async (req, res) => {
         }
 
         const newFeed = new NewsFeed({
-            caregiver: caregiver, 
+            caregiver: caregiver,
+            title: title,
             content: content,
             child: childId,
          });
@@ -101,7 +102,10 @@ router.put('/:id', verifyToken, verifyRole('Caregiver'), async (req, res) => {
         if (updatedFeed.caregiver.toString() !== req.user._id.toString()) {
             return res.status(403).json({ error: 'You are not authorized to edit this post' })
         }
-        const updatedPost = await NewsFeed.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const updatedPost = await NewsFeed.findByIdAndUpdate(req.params.id, req.body, { new: true })
+            .populate('caregiver', 'username')
+            .populate('child', 'name')
+
         res.status(200).json(updatedPost);
     } catch (error) {
         res.status(400).json({ error: error.message })
